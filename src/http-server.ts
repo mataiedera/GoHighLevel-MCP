@@ -117,7 +117,7 @@ class GHLMCPHttpServer {
   private setupExpress(): void {
     // Enable CORS for ChatGPT integration
     this.app.use(cors({
-      origin: ['https://chatgpt.com', 'https://chat.openai.com', 'http://localhost:*'],
+      origin: ['https://chatgpt.com', 'https://chat.openai.com', 'http://localhost:3000', 'http://localhost:8000'],
       methods: ['GET', 'POST', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       credentials: true
@@ -127,8 +127,26 @@ class GHLMCPHttpServer {
     this.app.use(express.json());
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
       console.log(`[HTTP] ${req.method} ${req.path} - ${new Date().toISOString()}`);
+      next();
+    });
+
+    // Bearer token auth — all endpoints require a valid MCP_SERVER_SECRET
+    const mcpSecret = process.env.MCP_SERVER_SECRET;
+    if (!mcpSecret) {
+      console.error('[GHL MCP HTTP] FATAL: MCP_SERVER_SECRET is not set. All requests will be rejected.');
+    }
+    this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      // Allow unauthenticated health checks
+      if (req.path === '/health') return next();
+      if (!mcpSecret) {
+        return res.status(503).json({ error: 'Server misconfigured: MCP_SERVER_SECRET not set' });
+      }
+      const auth = req.headers.authorization;
+      if (!auth || auth !== `Bearer ${mcpSecret}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       next();
     });
   }

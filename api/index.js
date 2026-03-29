@@ -186,9 +186,13 @@ function sendSSE(res, data) {
   }
 }
 
-// Set CORS headers
-function setCORSHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+const ALLOWED_ORIGINS = ['https://chatgpt.com', 'https://chat.openai.com'];
+
+// Set CORS headers — restrict to known origins only
+function setCORSHeaders(res, requestOrigin) {
+  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
   res.setHeader('Access-Control-Max-Age', '86400');
@@ -201,15 +205,15 @@ module.exports = async (req, res) => {
   log(`User-Agent: ${req.headers['user-agent']}`);
   
   // Set CORS headers
-  setCORSHeaders(res);
-  
+  setCORSHeaders(res, req.headers['origin']);
+
   // Handle preflight
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-  
-  // Health check
+
+  // Health check — public, no auth required
   if (req.url === '/health' || req.url === '/') {
     log("Health check requested");
     res.status(200).json({
@@ -229,7 +233,19 @@ module.exports = async (req, res) => {
     res.status(404).end();
     return;
   }
-  
+
+  // Bearer token auth — all endpoints past this point require authentication
+  const mcpSecret = process.env.MCP_SERVER_SECRET;
+  if (!mcpSecret) {
+    res.status(503).json({ error: 'Server misconfigured: MCP_SERVER_SECRET not set' });
+    return;
+  }
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || authHeader !== `Bearer ${mcpSecret}`) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
   // MCP SSE endpoint
   if (req.url === '/sse') {
     log("MCP SSE endpoint requested");
@@ -239,8 +255,9 @@ module.exports = async (req, res) => {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, Accept',
+      'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(req.headers['origin']) ? req.headers['origin'] : ALLOWED_ORIGINS[0],
+      'Vary': 'Origin',
+      'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
     });
     
