@@ -137,18 +137,21 @@ class GHLMCPHttpServer {
     if (!mcpSecret) {
       console.error('[GHL MCP HTTP] FATAL: MCP_SERVER_SECRET is not set. All requests will be rejected.');
     }
-    this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const authMiddleware: express.RequestHandler = (req, res, next) => {
       // Allow unauthenticated health checks
-      if (req.path === '/health') return next();
+      if (req.path === '/health') { next(); return; }
       if (!mcpSecret) {
-        return res.status(503).json({ error: 'Server misconfigured: MCP_SERVER_SECRET not set' });
+        res.status(503).json({ error: 'Server misconfigured: MCP_SERVER_SECRET not set' });
+        return;
       }
       const auth = req.headers.authorization;
       if (!auth || auth !== `Bearer ${mcpSecret}`) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
       }
       next();
-    });
+    };
+    this.app.use(authMiddleware);
   }
 
   /**
