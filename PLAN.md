@@ -40,8 +40,8 @@ _TBD_
 Resume work on GHL-MCP. Do NOT re-explore or re-plan.
 
 Read in order:
-1. Business/Altitude/GHL-MCP/PLAN.md — full plan + current status
-2. Business/Altitude/GHL-MCP/CLAUDE.md — app context (if present)
+1. tools/mcps/ghl-mcp/PLAN.md — full plan + current status
+2. tools/mcps/ghl-mcp/CLAUDE.md — app context (if present)
 3. [key file:line] — [why it matters]
 
 Current state: [fill from PLAN.md]
