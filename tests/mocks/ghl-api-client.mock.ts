@@ -299,6 +299,24 @@ export class MockGHLApiClient {
     };
   }
 
+  // Forms methods
+  async getForms(params: any): Promise<GHLApiResponse<any>> {
+    return {
+      success: true,
+      data: { forms: [{ id: 'form_1', name: 'Contact Us', locationId: this.config.locationId }] }
+    };
+  }
+
+  async getFormSubmissions(params: any): Promise<GHLApiResponse<any>> {
+    return {
+      success: true,
+      data: {
+        submissions: [{ id: 'sub_1', formId: params?.formId ?? 'form_1', createdAt: '2026-01-01T00:00:00.000Z' }],
+        meta: { total: 1 }
+      }
+    };
+  }
+
   async testConnection(): Promise<GHLApiResponse<any>> {
     return {
       success: true,
