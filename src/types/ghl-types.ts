@@ -3313,6 +3313,48 @@ export interface GHLGetMediaFilesResponse {
   hasMore?: boolean;
 }
 
+// Forms API types (v2). Shape mirrors the already-live-verified read in the
+// Business/Altus-Altitude repo (apps/web/lib/connections/ghlRead.ts,
+// listFormAssets/listSubmissions, verified 2026-07-21 against an OAuth
+// connection). Unverified here: whether a Private Integration Token sees the
+// same shape. See this plan's Part B, Task 9 for the live probe.
+export interface GHLForm {
+  id: string;
+  name: string;
+  locationId?: string;
+  createdAt?: string;
+}
+
+export interface GHLGetFormsResponse {
+  forms: GHLForm[];
+}
+
+export interface GHLFormSubmission {
+  id: string;
+  formId?: string;
+  contactId?: string | null;
+  createdAt?: string;
+  name?: string;
+  email?: string;
+}
+
+export interface GHLGetFormSubmissionsResponse {
+  submissions: GHLFormSubmission[];
+  meta?: { total?: number };
+}
+
+export interface MCPGetFormsParams {
+  limit?: number;
+  skip?: number;
+  type?: 'form' | 'survey';
+}
+
+export interface MCPGetFormSubmissionsParams {
+  formId?: string;
+  limit?: number;
+  page?: number;
+}
+
 export interface GHLUploadMediaFileRequest {
   file?: any; // Binary file data
   hosted?: boolean;

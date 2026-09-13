@@ -194,6 +194,9 @@ import {
   GHLUploadMediaFileResponse,
   GHLDeleteMediaRequest,
   GHLDeleteMediaResponse,
+  // Forms API types
+  GHLGetFormsResponse,
+  GHLGetFormSubmissionsResponse,
   // Custom Objects API types
   GHLGetObjectSchemaRequest,
   GHLGetObjectSchemaResponse,
@@ -3749,6 +3752,50 @@ export class GHLApiClient {
       );
 
       return this.wrapResponse({ success: true, message: 'Media file deleted successfully' });
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  // ===== FORMS API METHODS =====
+
+  /**
+   * GET FORMS
+   * GET /forms/
+   */
+  async getForms(params: { locationId: string; limit?: number; skip?: number; type?: 'form' | 'survey' }): Promise<GHLApiResponse<GHLGetFormsResponse>> {
+    try {
+      const response: AxiosResponse<GHLGetFormsResponse> = await this.axiosInstance.get('/forms/', {
+        params: {
+          locationId: params.locationId,
+          ...(params.limit !== undefined && { limit: params.limit }),
+          ...(params.skip !== undefined && { skip: params.skip }),
+          ...(params.type && { type: params.type })
+        }
+      });
+
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
+    }
+  }
+
+  /**
+   * GET FORM SUBMISSIONS
+   * GET /forms/submissions
+   */
+  async getFormSubmissions(params: { locationId: string; formId?: string; limit?: number; page?: number }): Promise<GHLApiResponse<GHLGetFormSubmissionsResponse>> {
+    try {
+      const response: AxiosResponse<GHLGetFormSubmissionsResponse> = await this.axiosInstance.get('/forms/submissions', {
+        params: {
+          locationId: params.locationId,
+          ...(params.formId && { formId: params.formId }),
+          ...(params.limit !== undefined && { limit: params.limit }),
+          ...(params.page !== undefined && { page: params.page })
+        }
+      });
+
+      return this.wrapResponse(response.data);
     } catch (error) {
       throw this.handleApiError(error as AxiosError<GHLErrorResponse>);
     }
