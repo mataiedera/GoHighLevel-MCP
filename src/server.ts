@@ -24,6 +24,7 @@ import { LocationTools } from './tools/location-tools.js';
 import { EmailISVTools } from './tools/email-isv-tools.js';
 import { SocialMediaTools } from './tools/social-media-tools.js';
 import { MediaTools } from './tools/media-tools.js';
+import { FormTools } from './tools/form-tools.js';
 import { ObjectTools } from './tools/object-tools.js';
 import { AssociationTools } from './tools/association-tools.js';
 import { CustomFieldV2Tools } from './tools/custom-field-v2-tools.js';
@@ -54,6 +55,7 @@ class GHLMCPServer {
   private emailISVTools: EmailISVTools;
   private socialMediaTools: SocialMediaTools;
   private mediaTools: MediaTools;
+  private formTools: FormTools;
   private objectTools: ObjectTools;
   private associationTools: AssociationTools;
   private customFieldV2Tools: CustomFieldV2Tools;
@@ -92,6 +94,7 @@ class GHLMCPServer {
     this.emailISVTools = new EmailISVTools(this.ghlClient);
     this.socialMediaTools = new SocialMediaTools(this.ghlClient);
     this.mediaTools = new MediaTools(this.ghlClient);
+    this.formTools = new FormTools(this.ghlClient);
     this.objectTools = new ObjectTools(this.ghlClient);
     this.associationTools = new AssociationTools(this.ghlClient);
     this.customFieldV2Tools = new CustomFieldV2Tools(this.ghlClient);
@@ -154,6 +157,7 @@ class GHLMCPServer {
         const emailISVToolDefinitions = this.emailISVTools.getToolDefinitions();
         const socialMediaToolDefinitions = this.socialMediaTools.getTools();
         const mediaToolDefinitions = this.mediaTools.getToolDefinitions();
+        const formToolDefinitions = this.formTools.getToolDefinitions();
         const objectToolDefinitions = this.objectTools.getToolDefinitions();
         const associationToolDefinitions = this.associationTools.getTools();
         const customFieldV2ToolDefinitions = this.customFieldV2Tools.getTools();
@@ -175,6 +179,7 @@ class GHLMCPServer {
           ...emailISVToolDefinitions,
           ...socialMediaToolDefinitions,
           ...mediaToolDefinitions,
+          ...formToolDefinitions,
           ...objectToolDefinitions,
           ...associationToolDefinitions,
           ...customFieldV2ToolDefinitions,
@@ -197,6 +202,7 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${emailISVToolDefinitions.length} email ISV tools\n`);
         process.stderr.write(`[GHL MCP] - ${socialMediaToolDefinitions.length} social media tools\n`);
         process.stderr.write(`[GHL MCP] - ${mediaToolDefinitions.length} media tools\n`);
+        process.stderr.write(`[GHL MCP] - ${formToolDefinitions.length} form tools\n`);
         process.stderr.write(`[GHL MCP] - ${objectToolDefinitions.length} object tools\n`);
         process.stderr.write(`[GHL MCP] - ${associationToolDefinitions.length} association tools\n`);
         process.stderr.write(`[GHL MCP] - ${customFieldV2ToolDefinitions.length} custom field V2 tools\n`);
@@ -250,6 +256,8 @@ class GHLMCPServer {
           result = await this.socialMediaTools.executeTool(name, args || {});
         } else if (this.isMediaTool(name)) {
           result = await this.mediaTools.executeTool(name, args || {});
+        } else if (this.isFormsTool(name)) {
+          result = await this.formTools.executeTool(name, args || {});
         } else if (this.isObjectTool(name)) {
           result = await this.objectTools.executeTool(name, args || {});
         } else if (this.isAssociationTool(name)) {
@@ -462,6 +470,16 @@ class GHLMCPServer {
   }
 
   /**
+   * Check if tool name belongs to form tools
+   */
+  private isFormsTool(toolName: string): boolean {
+    const formToolNames = [
+      'get_forms', 'get_form_submissions'
+    ];
+    return formToolNames.includes(toolName);
+  }
+
+  /**
    * Check if tool name belongs to object tools
    */
   private isObjectTool(toolName: string): boolean {
@@ -649,6 +667,7 @@ class GHLMCPServer {
       const emailISVToolCount = this.emailISVTools.getToolDefinitions().length;
       const socialMediaToolCount = this.socialMediaTools.getTools().length;
       const mediaToolCount = this.mediaTools.getToolDefinitions().length;
+      const formToolCount = this.formTools.getToolDefinitions().length;
       const objectToolCount = this.objectTools.getToolDefinitions().length;
       const associationToolCount = this.associationTools.getTools().length;
       const customFieldV2ToolCount = this.customFieldV2Tools.getTools().length;
@@ -658,7 +677,7 @@ class GHLMCPServer {
       const productsToolCount = this.productsTools.getTools().length;
       const paymentsToolCount = this.paymentsTools.getTools().length;
       const invoicesToolCount = this.invoicesTools.getTools().length;
-      const totalTools = contactToolCount + conversationToolCount + blogToolCount + opportunityToolCount + calendarToolCount + emailToolCount + locationToolCount + emailISVToolCount + socialMediaToolCount + mediaToolCount + objectToolCount + associationToolCount + customFieldV2ToolCount + workflowToolCount + surveyToolCount + storeToolCount + productsToolCount + paymentsToolCount + invoicesToolCount;
+      const totalTools = contactToolCount + conversationToolCount + blogToolCount + opportunityToolCount + calendarToolCount + emailToolCount + locationToolCount + emailISVToolCount + socialMediaToolCount + mediaToolCount + formToolCount + objectToolCount + associationToolCount + customFieldV2ToolCount + workflowToolCount + surveyToolCount + storeToolCount + productsToolCount + paymentsToolCount + invoicesToolCount;
       
       process.stderr.write(`📋 Available tools: ${totalTools}\n`);
       process.stderr.write('\n');
